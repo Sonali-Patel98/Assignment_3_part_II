@@ -1,0 +1,7 @@
+query = "What is the goal of this paper?"
+# RAG answer
+rag_result = qa_chain(query)
+print("RAG Answer:", rag_result)
+# Raw LLM (without retriever)
+llm_only_answer = llm.invoke(query)
+print("Raw LLM Answer:", llm_only_answer)
