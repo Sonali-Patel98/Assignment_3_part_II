@@ -1,0 +1,29 @@
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import Ollama
+from langchain.chains import RetrievalQA
+# Load PDF
+loader = PyPDFLoader("your_document.pdf")
+pages = loader.load()
+
+# Chunk the text
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+documents = text_splitter.split_documents(pages)
+
+# Generate embeddings
+embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+# Store embeddings in Chroma DB
+db = Chroma.from_documents(documents, embedding, persist_directory="chroma_db")
+db.persist()
+
+# Create retriever
+retriever = db.as_retriever(search_kwargs={"k": 3})
+
+# LLM: Ollama model
+llm = Ollama(model="mistral")
+
+# Setup RetrievalQA chain
+qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, chain_type="stuff")
